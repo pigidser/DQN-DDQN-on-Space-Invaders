@@ -1,9 +1,10 @@
 import gym
-import cv2
-from replay_buffer import ReplayBuffer
 import numpy as np
-from duel_Q import DuelQ
+
+import cv2
 from deep_Q import DeepQ
+from duel_Q import DuelQ
+from replay_buffer import ReplayBuffer
 
 # List of hyper-parameters and constants
 BUFFER_SIZE = 100000
@@ -137,4 +138,3 @@ class SpaceInvader(object):
             print(tot_award)
             reward_list.append(tot_award)
         return np.mean(reward_list), np.std(reward_list)
-

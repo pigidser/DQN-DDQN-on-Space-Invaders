@@ -1,13 +1,12 @@
 import gym
 import numpy as np
 import random
-import keras
+import tensorflow as tf
 import cv2
 from replay_buffer import ReplayBuffer
-from keras.models import load_model, Sequential
-from keras.layers.convolutional import Convolution2D
-from keras.optimizers import Adam
-from keras.layers.core import Activation, Dropout, Flatten, Dense
+from tensorflow.keras.models import load_model, Sequential
+from tensorflow.keras.layers import Conv2D, Activation, Dropout, Flatten, Dense
+from tensorflow.keras.optimizers import Adam
 
 # List of hyper-parameters and constants
 DECAY_RATE = 0.99
@@ -31,11 +30,11 @@ class DeepQ(object):
     def construct_q_network(self):
         # Uses the network architecture found in DeepMind paper
         self.model = Sequential()
-        self.model.add(Convolution2D(32, 8, 8, subsample=(4, 4), input_shape=(84, 84, NUM_FRAMES)))
+        self.model.add(Conv2D(32, (8, 8), strides=(4, 4), input_shape=(84, 84, NUM_FRAMES)))
         self.model.add(Activation('relu'))
-        self.model.add(Convolution2D(64, 4, 4, subsample=(2, 2)))
+        self.model.add(Conv2D(64, (4, 4), strides=(2, 2)))
         self.model.add(Activation('relu'))
-        self.model.add(Convolution2D(64, 3, 3))
+        self.model.add(Conv2D(64, (3, 3)))
         self.model.add(Activation('relu'))
         self.model.add(Flatten())
         self.model.add(Dense(512))
@@ -45,11 +44,11 @@ class DeepQ(object):
 
         # Creates a target network as described in DeepMind paper
         self.target_model = Sequential()
-        self.target_model.add(Convolution2D(32, 8, 8, subsample=(4, 4), input_shape=(84, 84, NUM_FRAMES)))
+        self.target_model.add(Conv2D(32, (8, 8), strides=(4, 4), input_shape=(84, 84, NUM_FRAMES)))
         self.target_model.add(Activation('relu'))
-        self.target_model.add(Convolution2D(64, 4, 4, subsample=(2, 2)))
+        self.target_model.add(Conv2D(64, (4, 4), strides=(2, 2)))
         self.target_model.add(Activation('relu'))
-        self.target_model.add(Convolution2D(64, 3, 3))
+        self.target_model.add(Conv2D(64, (3, 3)))
         self.target_model.add(Activation('relu'))
         self.target_model.add(Flatten())
         self.target_model.add(Dense(512))

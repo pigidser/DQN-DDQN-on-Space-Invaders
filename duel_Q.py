@@ -1,13 +1,14 @@
 import numpy as np
 import random
-import keras
-from keras.models import load_model, Sequential, Model
-from keras.layers.convolutional import Convolution2D
-from keras.optimizers import Adam
-from keras.layers.core import Activation, Dropout, Flatten, Dense
-from keras.layers import merge, Input
-from keras import backend as K
+import tensorflow as tf
+# from tensorflow import keras
+from tensorflow.keras.models import load_model, Sequential, Model
+from tensorflow.keras.layers import Conv2D
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.layers import Add, Activation, Dropout, Flatten, Dense, Input, Lambda
+from tensorflow.keras import backend as K
 from replay_buffer import ReplayBuffer
+# from space_invaders import SpaceInvader
 
 # List of hyper-parameters and constants
 DECAY_RATE = 0.99
@@ -24,21 +25,25 @@ class DuelQ(object):
         # Uses the network architecture found in DeepMind paper
         self.model = Sequential()
         input_layer = Input(shape = (84, 84, NUM_FRAMES))
-        conv1 = Convolution2D(32, 8, 8, subsample=(4, 4), activation='relu')(input_layer)
-        conv2 = Convolution2D(64, 4, 4, subsample=(2, 2), activation='relu')(conv1)
-        conv3 = Convolution2D(64, 3, 3, activation = 'relu')(conv2)
+        conv1 = Conv2D(32, (8, 8), strides=(4, 4), activation='relu')(input_layer)
+        conv2 = Conv2D(64, (4, 4), strides=(2, 2), activation='relu')(conv1)
+        conv3 = Conv2D(64, (3, 3), activation = 'relu')(conv2)
         flatten = Flatten()(conv3)
-        fc1 = Dense(512)(flatten)
-        advantage = Dense(NUM_ACTIONS)(fc1)
-        fc2 = Dense(512)(flatten)
-        value = Dense(1)(fc2)
-        policy = merge([advantage, value], mode = lambda x: x[0]-K.mean(x[0])+x[1], output_shape = (NUM_ACTIONS,))
-        # policy = Dense(NUM_ACTIONS)(merge_layer)
+        fc1 = Dense(512, name='fc1')(flatten)
+        advantage = Dense(NUM_ACTIONS, name='advantage')(fc1)
+        norm_advantage = Lambda(lambda x: x - tf.reduce_mean(x), name='norm_advantage')(advantage)
 
-        self.model = Model(input=[input_layer], output=[policy])
+        fc2 = Dense(512, name='fc2')(flatten)
+        value = Dense(1, name='value')(fc2)
+        
+        policy = Add(name='policy')([value, norm_advantage])
+        # policy = merge([advantage, value], mode = lambda x: x[0]-K.mean(x[0])+x[1], output_shape = (NUM_ACTIONS,))
+        # policy = Dense(NUM_ACTIONS)(merge_layer)
+        
+        self.model = Model(inputs=[input_layer], outputs=[policy])
         self.model.compile(loss='mse', optimizer=Adam(lr=0.000001))
 
-        self.target_model = Model(input=[input_layer], output=[policy])
+        self.target_model = Model(inputs=[input_layer], outputs=[policy])
         self.target_model.compile(loss='mse', optimizer=Adam(lr=0.000001))
         print("Successfully constructed networks.")
 
@@ -93,3 +98,4 @@ if __name__ == "__main__":
     # print space_invader.calculate_mean()
     space_invader.simulate("duel_q_video_2", True)
     # space_invader.train(TOT_FRAME)
+
