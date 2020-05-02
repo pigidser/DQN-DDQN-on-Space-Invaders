@@ -1,4 +1,5 @@
 import gym
+from gym import Wrapper
 import numpy as np
 
 import cv2
@@ -107,7 +108,7 @@ class SpaceInvader(object):
         done = False
         tot_award = 0
         if save:
-            self.env.monitor.start(path, force=True)
+            self.env = gym.wrappers.Monitor(self.env, path, force=True)
         self.env.reset()
         self.env.render()
         while not done:
@@ -119,7 +120,7 @@ class SpaceInvader(object):
             self.process_buffer.append(observation)
             self.process_buffer = self.process_buffer[1:]
         if save:
-            self.env.monitor.close()
+            self.env.close()
 
     def calculate_mean(self, num_samples = 100):
         reward_list = []
